@@ -235,9 +235,14 @@ func (p *Proxy) SetSessionTimeout(seconds int) {
 	p.sessionTimeout.Store(int64(seconds))
 }
 
-// ReloadChain atomically replaces the handler chain.
+// ReloadChain atomically replaces the handler chain and stops the old one.
+// Any handler in the old chain that implements handler.Stopper will have its
+// Stop() called to cleanly release goroutines and other resources.
 func (p *Proxy) ReloadChain(chain *handler.Chain) {
-	p.chain.Store(chain)
+	old := p.chain.Swap(chain)
+	if old != nil {
+		old.Stop()
+	}
 }
 
 // SessionCount returns the number of active sessions.

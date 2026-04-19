@@ -1,5 +1,5 @@
 {
-    "listen": ":5520",
+    "listen": ":5521",
     "session_timeout": 7200,
     "metrics_listen": ":9090",
     "handlers": [
@@ -11,14 +11,17 @@
             }
         },
         {
+            "type": "ip-connlimit",
+            "config": {
+                "max_conns_per_ip": 5,
+                "burst": 3
+            }
+        },
+        {
             "type": "sni-router",
             "config": {
                 "routes": {
-                    "play.example.com": "127.0.0.1:5521",
-                    "lobby.example.com": [
-                        "127.0.0.1:5522",
-                        "127.0.0.1:5523"
-                    ]
+                    "localhost": ["127.0.0.1:5520", "127.0.0.1:5522"]
                 }
             }
         },

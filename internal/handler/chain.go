@@ -36,6 +36,13 @@ type Handler interface {
 	OnDisconnect(ctx *Context)
 }
 
+// Stopper is an optional interface that handlers may implement to release
+// resources (goroutines, sockets, timers) when being replaced on config reload.
+// It is NOT part of the core Handler interface to avoid breaking existing handlers.
+type Stopper interface {
+	Stop()
+}
+
 // Chain executes handlers in sequence.
 type Chain struct {
 	handlers []Handler
@@ -78,4 +85,15 @@ func (c *Chain) OnDisconnect(ctx *Context) {
 // Handlers returns the list of handlers in the chain.
 func (c *Chain) Handlers() []Handler {
 	return c.handlers
+}
+
+// Stop releases resources held by any handler in the chain that implements
+// the optional Stopper interface. Call this when replacing a chain (e.g. on
+// config reload) to avoid goroutine leaks.
+func (c *Chain) Stop() {
+	for _, h := range c.handlers {
+		if s, ok := h.(Stopper); ok {
+			s.Stop()
+		}
+	}
 }

@@ -98,6 +98,11 @@ func (h *IPRateLimitHandler) OnPacket(_ *Context, _ []byte, _ Direction) Result 
 
 func (h *IPRateLimitHandler) OnDisconnect(_ *Context) {}
 
+// Stop terminates the cleanup goroutine. Implements handler.Stopper.
+func (h *IPRateLimitHandler) Stop() {
+	close(h.stopCleanup)
+}
+
 // cleanupLoop removes stale buckets every 60 seconds to prevent memory leaks.
 func (h *IPRateLimitHandler) cleanupLoop() {
 	ticker := time.NewTicker(60 * time.Second)

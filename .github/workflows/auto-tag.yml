@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # necesario para leer el historial de tags
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Calcular y pushear próximo tag
         run: |

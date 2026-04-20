@@ -1,0 +1,41 @@
+name: Auto Tag
+
+on:
+  push:
+    branches:
+      - main # cambiá si tu branch principal se llama master u otro
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    name: Bump patch version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # necesario para leer el historial de tags
+
+      - name: Calcular y pushear próximo tag
+        run: |
+          # Busca el último tag vX.Y.Z
+          LAST_TAG=$(git tag --list 'v*.*.*' --sort=-version:refname | head -n 1)
+
+          if [ -z "$LAST_TAG" ]; then
+            NEXT_TAG="v0.1.0"
+          else
+            # Incrementa el patch: v1.2.3 → v1.2.4
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${LAST_TAG#v}"
+            PATCH=$((PATCH + 1))
+            NEXT_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          echo "Último tag: ${LAST_TAG:-ninguno} → Nuevo: $NEXT_TAG"
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$NEXT_TAG"
+          git push origin "$NEXT_TAG"
